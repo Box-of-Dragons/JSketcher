@@ -10,35 +10,11 @@ This fork uses StructuredChaos `css/shared.css`, `js/global-bar.js`, and `js/sit
 
 The app index is the 3D CAD page. The old standalone `sketcher.html` 2D entry has been removed from this fork. Local dev runs on `http://localhost:3001`; production is static `dist/` output, not a Node app.
 
-## VPS Deploy via GitHub Webhook
+## Deploy
 
-The VPS auto-deploys when GitHub receives a push to `main`.
+Deploys run as part of the manual **Release** workflow (Actions → Release → Run workflow): it tags the release, creates the GitHub Release, then SSHes to the VPS — `git fetch` + `git reset --hard origin/main`, then `scripts/deploy.sh` (`npm ci`, changelog regeneration, `npx grunt`). nginx serves `dist/`.
 
-`scripts/webhook-server.mjs` is a small Node.js HTTP server (no external dependencies) that:
-
-1. Verifies the GitHub HMAC-SHA256 signature using `GITHUB_WEBHOOK_SECRET` from `.env`
-2. Checks that the push is to `refs/heads/main`
-3. Runs the deploy commands:
-   - `git fetch origin main` + `git reset --hard origin/main`
-   - `npm ci`
-   - `node scripts/generate-changelog.mjs --root=. --format=md --output=docs/changelog.md`
-   - `node scripts/generate-changelog.mjs --root=. --format=html --output=web/changelog-fragment.html`
-   - `npx grunt` (regenerates docs/changelog metadata, then builds static output to `dist/`)
-
-nginx serves the `dist/` directory directly as the document root. No Node app process to reload — the webhook server is the only PM2 process.
-
-### Setup
-
-1. Set `GITHUB_WEBHOOK_SECRET` in `.env` on the VPS
-2. `pm2 start ecosystem.config.cjs && pm2 save && pm2 startup`
-3. Configure nginx:
-   - `location /webhook { proxy_pass http://127.0.0.1:3004; }`
-   - `location / { root /path/to/jsketcher/dist; try_files $uri $uri/ /index.html; }`
-4. In GitHub repo settings → Webhooks → Add webhook:
-   - Payload URL: `https://jsketcher.misssponto.me.uk/webhook`
-   - Content type: `application/json`
-   - Secret: same value as `GITHUB_WEBHOOK_SECRET`
-   - Events: Just the push event
+Pushes no longer deploy — the GitHub webhook was removed. `scripts/webhook-server.mjs`, `ecosystem.config.cjs`, and the PM2 webhook process are legacy and can be decommissioned.
 
 ### Manual deploy (fallback)
 
@@ -48,10 +24,7 @@ SSH into the VPS and run:
 cd /path/to/jsketcher
 git fetch origin main
 git reset --hard origin/main
-npm ci
-node scripts/generate-changelog.mjs --root=. --format=md --output=docs/changelog.md
-node scripts/generate-changelog.mjs --root=. --format=html --output=web/changelog-fragment.html
-npx grunt
+bash scripts/deploy.sh
 ```
 
 ## No underscore prefix on private members
