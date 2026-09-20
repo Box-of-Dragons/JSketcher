@@ -252,8 +252,7 @@ function isBreakingChange(subject, body = '') {
 function getCommitType(subject, body = '') {
   if (isBreakingChange(subject, body)) return 'major';
   if (/^feat(\([^)]+\))?!?:/i.test(subject)) return 'minor';
-  if (/^fix(\([^)]+\))?!?:/i.test(subject)) return 'patch';
-  return 'none';
+  return 'patch';
 }
 
 function bumpVersion(version, bump) {
