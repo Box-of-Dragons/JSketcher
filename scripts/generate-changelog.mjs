@@ -55,8 +55,8 @@ function git(root, ...args) {
   }
 }
 
-function getChangelogGroup(subject) {
-  if (/BREAKING CHANGE|!:/i.test(subject)) return 'breaking';
+function getChangelogGroup(subject, body = '') {
+  if (isBreakingChange(subject, body)) return 'breaking';
   if (/^feat(\([^)]+\))?:/i.test(subject)) return 'feature';
   if (/^fix(\([^)]+\))?:/i.test(subject)) return 'fix';
   if (/^docs(\([^)]+\))?:/i.test(subject)) return 'docs';
@@ -234,40 +234,57 @@ for (const record of logOutput.split('\x1e')) {
 }
 
 // --- Version computation ---
-// Walk fork commits oldest-first, starting from the v0.1.0 baseline tag.
-// The tag points at the first fork commit; each subsequent commit bumps
-// the version per conventional commit rules (feat=minor, fix=patch,
-// BREAKING=major, everything else=revision increment).
+// Release segments over the fork commits: each strict vX.Y.Z tag closes a
+// segment and labels it. The open tail segment gets the pending version —
+// the latest tag plus the single highest pending bump, applied once.
 
-function getCommitType(subject) {
-  if (/BREAKING CHANGE|!:/i.test(subject)) return 'major';
-  if (/^feat(\([^)]+\))?:/i.test(subject)) return 'minor';
-  if (/^fix(\([^)]+\))?:/i.test(subject)) return 'patch';
+function parseSemverTag(tag) {
+  const match = /^v(\d+)\.(\d+)\.(\d+)$/.exec(tag.trim());
+  return match ? [Number(match[1]), Number(match[2]), Number(match[3])] : null;
+}
+
+// Breaking is signalled by `!` in the subject or a `BREAKING CHANGE:` /
+// `BREAKING-CHANGE:` footer (line-anchored so prose mentions don't count).
+function isBreakingChange(subject, body = '') {
+  return /!:/.test(subject) || /^BREAKING[ -]CHANGE:/m.test(body);
+}
+
+function getCommitType(subject, body = '') {
+  if (isBreakingChange(subject, body)) return 'major';
+  if (/^feat(\([^)]+\))?!?:/i.test(subject)) return 'minor';
+  if (/^fix(\([^)]+\))?!?:/i.test(subject)) return 'patch';
   return 'none';
 }
 
-function formatVersion(version, revision = 0) {
-  if (revision > 0) {
-    return `v${version[0]}.${version[1]}.${version[2]}.${revision}`;
+function bumpVersion(version, bump) {
+  switch (bump) {
+    case 'major':
+      return [version[0] + 1, 0, 0];
+    case 'minor':
+      return [version[0], version[1] + 1, 0];
+    case 'patch':
+      return [version[0], version[1], version[2] + 1];
+    default:
+      return version.slice();
   }
+}
+
+function formatVersion(version) {
   return `v${version[0]}.${version[1]}.${version[2]}`;
 }
 
-// Find the baseline tag (v0.1.0) and which commit it points to
-let baselineVersion = [0, 1, 0, 0];
-let baselineSha = null;
-try {
-  const tagSha = git(root, 'rev-list', '-n', '1', 'v0.1.0').trim();
-  baselineSha = tagSha;
-} catch (e) {
-  // v0.1.0 tag not found — start from 0.0.0 and let the first commit set it
-  baselineVersion = [0, 0, 0, 0];
+// Map strict semver tags to the commit they point at; %(*objectname) peels
+// annotated tags down to their commit.
+const tagVersions = {};
+const tagOutput = git(root, 'tag', '--format=%(objectname)|%(*objectname)|%(refname:short)');
+for (const line of tagOutput.split('\n')) {
+  const parts = line.trim().split('|');
+  if (parts.length !== 3) continue;
+  const version = parseSemverTag(parts[2]);
+  if (!version) continue;
+  tagVersions[parts[1] !== '' ? parts[1] : parts[0]] = version;
 }
 
-let resolvedVersion = baselineVersion.slice();
-let revision = 0;
-
-// If the baseline tag exists, the commit it points to IS v0.1.0 — don't bump it
 const changeGroups = {
   breaking: [],
   feature: [],
@@ -280,45 +297,42 @@ const changeGroups = {
   other: [],
 };
 
+const segments = [];
+let tailCommits = [];
 for (const commit of forkCommits) {
-  const { sha, date, subject, body } = commit;
-
-  // If this is the baseline commit, it's already v0.1.0 — don't bump
-  if (baselineSha && sha === baselineSha) {
-    resolvedVersion = baselineVersion.slice();
-    revision = 0;
-  } else {
-    const commitType = getCommitType(subject);
-    switch (commitType) {
-      case 'major':
-        resolvedVersion = [resolvedVersion[0] + 1, 0, 0, 0];
-        revision = 0;
-        break;
-      case 'minor':
-        resolvedVersion = [resolvedVersion[0], resolvedVersion[1] + 1, 0, 0];
-        revision = 0;
-        break;
-      case 'patch':
-        resolvedVersion = [resolvedVersion[0], resolvedVersion[1], resolvedVersion[2] + 1, 0];
-        revision = 0;
-        break;
-      default:
-        revision++;
-        break;
-    }
+  tailCommits.push(commit);
+  if (tagVersions[commit.sha]) {
+    segments.push({ version: tagVersions[commit.sha], commits: tailCommits });
+    tailCommits = [];
   }
-
-  const group = getChangelogGroup(subject);
-  changeGroups[group].push({
-    version: formatVersion(resolvedVersion, revision),
-    sha: sha.slice(0, 8),
-    date,
-    subject: humanizeCommitSubject(subject),
-    description: cleanCommitDescription(subject, body),
-  });
 }
 
-const currentVersion = formatVersion(resolvedVersion, revision);
+const lastTagVersion = segments.length > 0 ? segments[segments.length - 1].version : null;
+const bumpRank = { none: 0, patch: 1, minor: 2, major: 3 };
+let pendingBump = 'none';
+for (const commit of tailCommits) {
+  const bump = getCommitType(commit.subject, commit.body);
+  if (bumpRank[bump] > bumpRank[pendingBump]) pendingBump = bump;
+}
+// With no prior tag the pending first release is always v0.1.0.
+const tailVersion = lastTagVersion !== null ? bumpVersion(lastTagVersion, pendingBump) : [0, 1, 0];
+segments.push({ version: tailVersion, commits: tailCommits });
+
+for (const segment of segments) {
+  const segmentVersion = formatVersion(segment.version);
+  for (const commit of segment.commits) {
+    const group = getChangelogGroup(commit.subject, commit.body);
+    changeGroups[group].push({
+      version: segmentVersion,
+      sha: commit.sha.slice(0, 8),
+      date: commit.date,
+      subject: humanizeCommitSubject(commit.subject),
+      description: cleanCommitDescription(commit.subject, commit.body),
+    });
+  }
+}
+
+const currentVersion = formatVersion(tailVersion);
 
 // Total commit count and HEAD info (for the snapshot line)
 const commitCount = parseInt(git(root, 'rev-list', '--count', headRef).trim(), 10);
