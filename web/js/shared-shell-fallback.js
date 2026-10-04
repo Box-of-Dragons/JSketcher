@@ -24,21 +24,55 @@
     return '';
   }
 
+  var MENU_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+    '<path d="M4 7h16M4 12h16M4 17h16"/></svg>';
+
   function renderGlobalBar() {
     var placeholder = document.getElementById('global-bar');
     if (!placeholder || placeholder.classList.contains('global-bar')) return;
     var activeId = activeSiteId(placeholder);
     var local = isLocal();
+    var activeLabel = 'Sites';
     var links = SITES.map(function (site) {
       var href = site.id === activeId ? '/' : (local ? site.localHref : site.liveHref);
       var className = 'global-bar-link' + (site.id === activeId ? ' active' : '');
+      if (site.id === activeId) activeLabel = site.label;
       return '<a class="' + className + '" href="' + escapeHtml(href) + '">' + escapeHtml(site.label) + '</a>';
     }).join('');
 
     placeholder.className = 'global-bar';
     placeholder.setAttribute('role', 'navigation');
     placeholder.setAttribute('aria-label', 'Site switcher');
-    placeholder.innerHTML = '<div class="shell global-bar-row">' + links + '</div>';
+    placeholder.innerHTML = '<div class="shell global-bar-row">' +
+      '<button class="global-bar-toggle" type="button" aria-label="Open site menu" aria-expanded="false" aria-controls="global-bar-menu">' +
+      MENU_ICON + '</button>' +
+      '<span class="global-bar-current">' + escapeHtml(activeLabel) + '</span>' +
+      '<nav class="global-bar-menu" id="global-bar-menu" aria-label="Family sites">' + links + '</nav>' +
+      '</div>';
+
+    bindGlobalBarToggle(placeholder);
+  }
+
+  function bindGlobalBarToggle(placeholder) {
+    var button = placeholder.querySelector('.global-bar-toggle');
+    if (!button) return;
+
+    function setOpen(open) {
+      placeholder.classList.toggle('global-bar--open', open);
+      button.setAttribute('aria-expanded', String(open));
+      button.setAttribute('aria-label', open ? 'Close site menu' : 'Open site menu');
+    }
+
+    button.addEventListener('click', function (e) {
+      e.stopPropagation();
+      setOpen(!placeholder.classList.contains('global-bar--open'));
+    });
+    document.addEventListener('click', function (e) {
+      if (!placeholder.contains(e.target)) setOpen(false);
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') setOpen(false);
+    });
   }
 
   function navHref(item) {
@@ -78,14 +112,20 @@
       links += '<a class="project-link project-link--gitlab" href="' + escapeHtml(config.gitlab) + '" target="_blank" rel="noopener noreferrer">GitLab</a>';
     }
 
+    var navToggle = '';
+    if (config.nav && config.nav.length) {
+      navToggle = '<button class="main-nav-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="main-nav">' +
+        MENU_ICON + '</button>';
+    }
+
     var chevronIcon = '<svg class="site-header-toggle-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
       '<path d="m16 14-4-4-4 4"/></svg>';
 
     placeholder.outerHTML = '<header class="site-header" data-site-header>' +
       '<div class="site-header__content shell header-row">' +
       '<h1 class="brand">' + escapeHtml(config.brand || 'JSketcher') + '</h1>' +
-      '<nav class="main-nav" aria-label="Main navigation">' + nav + '</nav>' +
-      '<div class="header-project-links" aria-label="Project links">' + links + '</div>' +
+      '<nav class="main-nav" id="main-nav" aria-label="Main navigation">' + nav + '</nav>' +
+      '<div class="header-project-links" aria-label="Project links">' + links + navToggle + '</div>' +
       '</div>' +
       '<div class="site-header__handle">' +
       '<button class="site-header-toggle" type="button" aria-label="Collapse site header" aria-expanded="true">' +
@@ -94,6 +134,7 @@
       '</div></header>';
 
     bindSiteHeaderToggle();
+    bindMainNavToggle();
   }
 
   function bindSiteHeaderToggle() {
@@ -106,6 +147,33 @@
       header.classList.toggle('site-header--collapsed', collapsed);
       button.setAttribute('aria-expanded', String(!collapsed));
       button.setAttribute('aria-label', collapsed ? 'Expand site header' : 'Collapse site header');
+    });
+  }
+
+  function bindMainNavToggle() {
+    var header = document.querySelector('[data-site-header]');
+    var button = header && header.querySelector('.main-nav-toggle');
+    var nav = header && header.querySelector('.main-nav');
+    if (!header || !button || !nav) return;
+
+    function setOpen(open) {
+      header.classList.toggle('site-header--nav-open', open);
+      button.setAttribute('aria-expanded', String(open));
+      button.setAttribute('aria-label', open ? 'Close navigation menu' : 'Open navigation menu');
+    }
+
+    button.addEventListener('click', function (e) {
+      e.stopPropagation();
+      setOpen(!header.classList.contains('site-header--nav-open'));
+    });
+    nav.addEventListener('click', function (e) {
+      if (e.target.closest && e.target.closest('a')) setOpen(false);
+    });
+    document.addEventListener('click', function (e) {
+      if (!header.contains(e.target)) setOpen(false);
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') setOpen(false);
     });
   }
 
