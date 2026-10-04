@@ -21,7 +21,7 @@ Pushes no longer deploy — the GitHub webhook was removed. `scripts/webhook-ser
 SSH into the VPS and run:
 
 ```bash
-cd /path/to/jsketcher
+cd /home/sc-jsketcher/htdocs/jsketcher.structuredchaos.dev
 git fetch origin main
 git reset --hard origin/main
 bash scripts/deploy.sh
