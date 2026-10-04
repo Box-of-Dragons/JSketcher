@@ -1,5 +1,5 @@
 #!/bin/bash
-su - misssponto-auth -s /bin/bash << 'EOF'
+su - sc-auth -s /bin/bash << 'EOF'
 cd ~/htdocs/BetterAuth
 git remote set-url origin https://github.com/Box-of-Dragons/BetterAuth.git
 git config --local credential.helper store

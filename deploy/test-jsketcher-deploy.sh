@@ -1,5 +1,5 @@
 #!/bin/bash
-su - misssponto-jsketcher -s /bin/bash << 'EOF'
+su - sc-jsketcher -s /bin/bash << 'EOF'
 source ~/.nvm/nvm.sh
 cd ~/htdocs/repo
 echo "=== git fetch ==="

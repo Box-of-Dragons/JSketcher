@@ -1,5 +1,5 @@
 #!/bin/bash
-su - misssponto-auth -s /bin/bash << 'EOF'
+su - sc-auth -s /bin/bash << 'EOF'
 source ~/.nvm/nvm.sh
 cd ~/htdocs/BetterAuth
 echo "=== git fetch ==="

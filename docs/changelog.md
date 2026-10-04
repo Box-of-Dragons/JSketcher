@@ -170,8 +170,8 @@ _Last generated: 2026-08-03_
 
 **v0.6.0.5** · 15ebfdc0 · 2026-08-02
 
-- add www.jsketcher.misssponto.me.uk nginx config (root dist/, /webhook proxy to 3004)
-- add www.auth.misssponto.me.uk nginx config (root BetterAuth, /webhook proxy to 3002, / proxy to 3000)
+- add www.jsketcher.structuredchaos.dev nginx config (root dist/, /webhook proxy to 3004)
+- add www.auth.structuredchaos.dev nginx config (root BetterAuth, /webhook proxy to 3002, / proxy to 3000)
 - add setup scripts for nvm, SSH keys, and git credentials used during VPS provisioning
 
 ### Add project persistence and touch workflow plans
