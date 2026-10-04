@@ -12,7 +12,7 @@
       var host = location.hostname;
       var isLocal = host === 'localhost' || host === '127.0.0.1' || host.indexOf('.ddev.site') !== -1;
       var version = 'jsketcher-header-20260731c';
-      var liveHref = 'https://misssponto.me.uk/css/shared.css?v=' + version;
+      var liveHref = 'https://structuredchaos.dev/css/shared.css?v=' + version;
       var localHref = 'http://localhost:4000/css/shared.css?v=' + version;
       var link = document.createElement('link');
       var loaded = false;
@@ -41,17 +41,17 @@
       {
         label: 'CAD',
         localHref: '/',
-        liveHref: 'https://jsketcher.misssponto.me.uk/'
+        liveHref: 'https://jsketcher.structuredchaos.dev/'
       },
       {
         label: 'Roadmap',
         localHref: '/roadmap.html',
-        liveHref: 'https://jsketcher.misssponto.me.uk/roadmap.html'
+        liveHref: 'https://jsketcher.structuredchaos.dev/roadmap.html'
       },
       {
         label: 'Changelog',
         localHref: '/changelog.html',
-        liveHref: 'https://jsketcher.misssponto.me.uk/changelog.html'
+        liveHref: 'https://jsketcher.structuredchaos.dev/changelog.html'
       }
     ],
     github: 'https://github.com/Box-of-Dragons/JSketcher',
@@ -66,8 +66,8 @@
 
       function loadSharedScript(file) {
         var loaded = false;
-        var primary = (isLocal ? 'http://localhost:4000' : 'https://misssponto.me.uk') + '/js/' + file + '?v=' + version;
-        var fallback = 'https://misssponto.me.uk/js/' + file + '?v=' + version;
+        var primary = (isLocal ? 'http://localhost:4000' : 'https://structuredchaos.dev') + '/js/' + file + '?v=' + version;
+        var fallback = 'https://structuredchaos.dev/js/' + file + '?v=' + version;
         var script = document.createElement('script');
 
         function useLiveFallback() {

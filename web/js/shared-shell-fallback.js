@@ -2,10 +2,10 @@
   'use strict';
 
   var SITES = [
-    { id: 'structured-chaos', label: 'Structured Chaos', liveHref: 'https://misssponto.me.uk/', localHref: 'http://localhost:4000' },
-    { id: 'box-of-dragons', label: 'Box of Dragons', liveHref: 'https://www.boxofdragons.misssponto.me.uk/', localHref: 'http://boxofdragons.ddev.site' },
-    { id: 'knitstitch', label: 'KnitStitch', liveHref: 'https://knitstitch.misssponto.me.uk/', localHref: 'http://localhost:5173' },
-    { id: 'jsketcher', label: 'JSketcher', liveHref: 'https://jsketcher.misssponto.me.uk/', localHref: 'http://localhost:3001' }
+    { id: 'structured-chaos', label: 'Structured Chaos', liveHref: 'https://structuredchaos.dev/', localHref: 'http://localhost:4000' },
+    { id: 'box-of-dragons', label: 'Box of Dragons', liveHref: 'https://boxofdragons.structuredchaos.dev/', localHref: 'http://boxofdragons.ddev.site' },
+    { id: 'knitstitch', label: 'KnitStitch', liveHref: 'https://knitstitch.structuredchaos.dev/', localHref: 'http://localhost:5173' },
+    { id: 'jsketcher', label: 'JSketcher', liveHref: 'https://jsketcher.structuredchaos.dev/', localHref: 'http://localhost:3001' }
   ];
 
   function isLocal() {

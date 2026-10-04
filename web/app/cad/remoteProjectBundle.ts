@@ -6,7 +6,7 @@ export const BundleName = "@RemoteProject";
 function authBaseUrl() {
   const host = window.location.hostname.toLowerCase();
   const isLocal = host === "localhost" || host === "127.0.0.1" || host.indexOf(".ddev.site") !== -1;
-  return isLocal ? "http://localhost:3000" : "https://auth.misssponto.me.uk";
+  return isLocal ? "http://localhost:3000" : "https://auth.structuredchaos.dev";
 }
 
 function signInUrl() {

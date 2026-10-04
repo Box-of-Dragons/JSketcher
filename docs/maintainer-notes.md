@@ -22,7 +22,7 @@ JSketcher is a browser-only CAD app. There is no application server in normal us
 The public pages use the shared Structured Chaos chrome.
 
 - `web/index.html` and `web/changelog.html` load `css/shared.css`, `global-bar.js`, and `site-header.js` from StructuredChaos.
-- The loader uses `http://localhost:4000` in local development and `https://misssponto.me.uk` in production.
+- The loader uses `http://localhost:4000` in local development and `https://structuredchaos.dev` in production.
 - `web/css/site-shell.css` must stay layout-only for JSketcher app/content sizing. Do not restyle the global bar, title header, nav, project links, or collapse tab there.
 - `web/js/shared-shell-fallback.js` only renders matching shared-class fallback markup when the shared scripts fail to load.
 - If static output is edited manually, mirror shell changes into the matching files under `dist/`.

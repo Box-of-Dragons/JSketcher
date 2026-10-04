@@ -12,7 +12,7 @@ A fork of [xibyte/jsketcher](https://github.com/xibyte/jsketcher) that I'm worki
 
 JSketcher is a **parametric** 3D CAD modeler written in pure JavaScript. It uses a 2D constraint solver for sketches and the feature/history metaphor to build models. The constraint solver is completely written in JavaScript/TypeScript and powers the 3D CAD workflow, with OpenCascade handling solid modeling operations.
 
-**Hosted at:** [jsketcher.misssponto.me.uk](https://jsketcher.misssponto.me.uk/)
+**Hosted at:** [jsketcher.structuredchaos.dev](https://jsketcher.structuredchaos.dev/)
 
 This fork serves the 3D CAD app at `/`; the old standalone `sketcher.html` 2D entry has been removed to focus on the core 3D experience.
 
